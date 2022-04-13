@@ -12,7 +12,7 @@ export default function App() {
   return (
     <NativeBaseProvider>
       <NavigationContainer>
-        <Stack.Navigator initialRouteName="Home" screenOptions={{ headerShown: false }}>
+        <Stack.Navigator initialRouteName="LoginForm" screenOptions={{ headerShown: false }}>
           <Stack.Screen name="LoginForm" component={LoginForm} />
           <Stack.Screen name="Home" component={Home} />
         </Stack.Navigator>

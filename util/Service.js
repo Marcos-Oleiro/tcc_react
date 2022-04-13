@@ -5,7 +5,6 @@ export default class Service {
         this.url = `${Constants.HOST}/${endpoint}`;
     }
 
-
     doReq(method, data, headers) {
         return fetch(this.url, {
             method: method,
@@ -13,5 +12,9 @@ export default class Service {
             headers: headers,
             body: data
         });
+    }
+
+    doAsynReq(options) {
+        return fetch(this.url, options);
     }
 }

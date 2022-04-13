@@ -1,16 +1,16 @@
-import { Box, Button, Center, FormControl, Input, Stack, WarningOutlineIcon } from "native-base";
-import React, { useState } from "react";
+import { Box, Button, Center, FormControl, Input, Stack, WarningOutlineIcon, Alert, Text, View, VStack, HStack } from "native-base";
+import React, { useState, useEffect } from "react";
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { makeLogin } from "../util/Utils.js";
 import LogoComp from "./LogoComp.js";
 
 
 
+
 export default function LoginForm({ navigation }) {
     const [email, setEmail] = useState("spellzito@oleirosoftware.com.br");
     const [passwd, setPasswd] = useState("1aA9!ss");
-    const [retorno, setRetorno] = useState('');
-    const [token, setToken] = useState('');
+
 
     return (
         <SafeAreaProvider>
@@ -38,32 +38,11 @@ export default function LoginForm({ navigation }) {
                             </FormControl.HelperText>
 
                             <Button
-                                onPress={() => {
-                                    let resStatus;
-                                    makeLogin(email, passwd)
-                                        .then(res => {
-                                            resStatus = res.status;
-                                            if (resStatus === 200) {
-                                                console.log("ID: " + res.headers.get('id'));
-                                            }
-                                            return res.json();
-                                        })
-                                        .then(r => {
-                                            if (resStatus === 200) {
-                                                console.log(r.token);
-                                                navigation.navigate('Home', { token: r.token })
-                                            }
-                                        })
-                                }}
+                                onPress={
+                                    async () => makeLogin(email, passwd, navigation)}
                             >
                                 Enviar
                             </Button>
-                            <Box mt="50%">
-                                <Button onPress={() => navigation.navigate('Home')}>
-                                    Ir para tela de Login!:
-                                </Button>
-                            </Box>
-
                             <FormControl.ErrorMessage
                                 leftIcon={<WarningOutlineIcon size="xs" />}>
                                 Atleast 6 characters are required.

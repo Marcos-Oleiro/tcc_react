@@ -12,11 +12,6 @@ export default function Map({ lat, long, latDelta, sliderValue }) {
     setLongLoc(long)
   })
 
-  // console.log("------------------------------------")
-  // console.log("CARREGANDO O MAPA")
-  // console.log("lat : " + latLoc)
-  // console.log("long : " + longLoc)
-  // console.log("------------------------------------")
   return (
 
     <MapView

@@ -5,8 +5,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import ReputationEnum from "../util/ReputationEnum";
 import * as Location from "expo-location";
 import Map from "./Map";
-import { parse } from "react-native-svg";
-import { updateLocation } from "../util/Utils.js"
+import { updateLocation } from "../util/Utils.js";
 
 export default function Home({ navigation, route }) {
 
@@ -14,15 +13,11 @@ export default function Home({ navigation, route }) {
     const [coordLat, setCoordLat] = useState(0.0);
     const [coordLong, setCoordLong] = useState(0.0);
     const [latDelta, setLatDelta] = useState(0.027);
-    // const [latDelta, setLatDelta] = useState(0.009);
     const [errorMsg, setErrorMsg] = useState('');
-    const window = useWindowDimensions();
-
 
     useEffect(() => {
         (async () => {
             try {
-
                 let { status } = await Location.requestForegroundPermissionsAsync();
 
                 if (status !== 'granted') {
@@ -31,16 +26,10 @@ export default function Home({ navigation, route }) {
                 }
                 let resp = await Location.getCurrentPositionAsync({});
 
-
                 // let backPerm = await Location.requestBackgroundPermissionsAsync();
                 setCoordLat(resp.coords.latitude)
                 setCoordLong(resp.coords.longitude)
 
-                // console.log("---------------------------------------")
-                // console.log('Inicial')
-                // console.log("lat : " + coordLat)
-                // console.log("long : " + coordLong)
-                // console.log("---------------------------------------")
                 let update = await Location.watchPositionAsync({
                     distanceInterval: 10,
                     // timeInterval: 5000,
@@ -48,31 +37,20 @@ export default function Home({ navigation, route }) {
 
                 },
                     newLocation => {
-                        // console.log("---------------------------------------")
-                        // console.log('ATUALIZANDO')
-                        // console.log("Nova Loc : " + JSON.stringify(newLocation))
                         setCoordLat(newLocation.coords.latitude)
                         setCoordLong(newLocation.coords.longitude)
                         updateLocation({ coordLat, coordLong })
-                        // console.log("lat : " + coordLat)
-                        // console.log("long : " + coordLong)
-                        // console.log("---------------------------------------")
                     });
             }
             catch {
                 setErrorMsg('Exceção na hora de pegar a localização')
             }
-
-
         })();
     }, []);
 
     return (
         <SafeAreaProvider>
             <Box bg="darkBlue.900" flex={2} pt={16} pl={2} pr={1} safeArea>
-                {/* <Button onPress={() => navigation.navigate('LoginForm')}>
-                    Ir para tela de Login
-                </Button> */}
                 <VStack pt={8} pb={8}>
                     <Heading >
                         <HStack>
@@ -97,6 +75,7 @@ export default function Home({ navigation, route }) {
                 <Map pt={20} long={coordLong} lat={coordLat} latDelta={latDelta} sliderValue={sliderValue} />
                 <Slider pt={20}>
                     <Slider
+
                         defaultValue={sliderValue}
                         minValue={1}
                         maxValue={100}
@@ -114,11 +93,6 @@ export default function Home({ navigation, route }) {
                     </Slider>
                 </Slider>
             </Box >
-            {/* <Text>lat : {coordLat}</Text>
-            <Text>long : {coordLong}</Text>
-            <Text>erro : {errorMsg}</Text>
-            <Text>slider : {sliderValue}</Text>
-            <Text>LatDelta : {latDelta}</Text> */}
         </SafeAreaProvider>
     )
 }
@@ -127,7 +101,7 @@ const styles = StyleSheet.create({
     userProfie: {
         color: "white"
     }
-})
+});
 
 
 const setLatDeltaBySlideValue = (sliderValue) => {
@@ -135,7 +109,7 @@ const setLatDeltaBySlideValue = (sliderValue) => {
     const ratio = 0.009;
     return parseFloat((sliderValue * 0.02).toFixed(4));
     // return parseFloat((sliderValue * 0.05).toFixed(4));
-}
+};
 
 // latDelta=0.9    -> 100km
 // latDelta=0.45   -> 50km
