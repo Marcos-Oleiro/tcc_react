@@ -6,6 +6,7 @@ export async function makeLogin(email, passwd, navigation) {
 
     // email = 'oleiro87@gmail.com';
     // passwd = '1221';
+
     const login_info = {
         email,
         passwd,
@@ -25,35 +26,33 @@ export async function makeLogin(email, passwd, navigation) {
 
     const url = `${Constants.HOST}/login`;
 
-    try {
-        const raw = await fetch(url, options);
-        const status = raw.status;
-        if (raw.status == 200) {
-
-            const id = raw.headers.get('id');
-            const body = await raw.json();
-            const token = body['token'];
-            await storeData('token', token);
-            await storeData('id', id);
-            return navigation.navigate('Home',
-                { token: token, id: id })
-        }
-
+    const raw = await fetch(url, options);
+    const status = raw.status;
+    if (raw.status == 200) {
+        const id = raw.headers.get('id');
+        const body = await raw.json();
+        const token = body['token'];
+        await storeData('token', token);
+        await storeData('id', id);
+        // await storeData('sliderVal', 15.7.toString());
+        return ({ status, token, id })
+    }
+    if (raw.status == 400) {
         const body = await raw.json();
         const errorMsg = body['erro'];
-        console.log("ERRO -> " + errorMsg)
-    } catch (error) {
-        console.error("erro");
+        throw errorMsg;
     }
 }
 
 export async function updateLocation(updateInfo) {
 
+    const token = await getData('token');
+
     const headers = {
         'Accept': 'application/json, text/plain, */*',
         'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
     };
-
     const options = {
         method: 'POST',
         mode: "cors",
@@ -66,25 +65,33 @@ export async function updateLocation(updateInfo) {
 
     try {
         const raw = await fetch(url, options);
-        console.log(raw)
-        // const json = await raw.json();
-        // console.log("resultado back" + JSON.stringify(json));
+        if (raw.status === 401) console.error('Não autorizado');
+        // if (raw.status === 200) { 
+        //     const json = await raw.json()
+        //     console.log("json: " + JSON.stringify(json));
+        // }
     } catch (e) {
-        console.error(e);
+        console.log(e);
     }
 }
 
 export async function getData(key) {
-    try {
-        const value = await AsyncStorage.getItem(key);
-        if (value !== null) {
-            return value
-        }
-    } catch (e) {
-        console.error(e);
+    // console.log(`key getData -> ${key}`)
+    const value = await AsyncStorage.getItem(key);
+    if (value !== null) {
+        return value
     }
 }
 
+export async function storeData(key, value) {
+    console.log(`key storeData -> ${key}`)
+    console.log(`value storeData -> ${value}`)
+    try {
+        AsyncStorage.setItem(key, value)
+    } catch (e) {
+        throw e;
+    }
+}
 // export function getUsersPerDistance(email, passwd) {
 
 //     const login_info = {
@@ -106,11 +113,3 @@ export async function getData(key) {
 //     //     .catch(console.error)
 // }
 // http://localhost:8081/updateLocation/15
-
-const storeData = async (key, value) => {
-    try {
-        await AsyncStorage.setItem(key, value)
-    } catch (e) {
-        console.error(e);
-    }
-}

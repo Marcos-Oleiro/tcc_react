@@ -1,16 +1,27 @@
-import { Box, Button, Center, FormControl, Input, Stack, WarningOutlineIcon, Alert, Text, View, VStack, HStack } from "native-base";
+import { Box, Button, Center, FormControl, Input, Stack, WarningOutlineIcon, Alert, Text, View, VStack, HStack, IconButton, CloseIcon } from "native-base";
 import React, { useState, useEffect } from "react";
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { makeLogin } from "../util/Utils.js";
 import LogoComp from "./LogoComp.js";
 
 
-
-
-export default function LoginForm({ navigation }) {
+export default function LoginForm({ navigation, routes }) {
     const [email, setEmail] = useState("spellzito@oleirosoftware.com.br");
     const [passwd, setPasswd] = useState("1aA9!ss");
+    const [erro, setErro] = useState("");
+    const [showErro, setShowErro] = useState(false);
+    // const [error] = routes.params;
 
+    const login = () => {
+        makeLogin(email, passwd, navigation).then(({ token, id }) => {
+            navigation.navigate('Home', { token, id })
+        }).catch(erro => {
+            console.log(erro)
+            setErro(erro)
+            setShowErro(true)
+            // <Alert w="100%" status="error" />;
+        });
+    };
 
     return (
         <SafeAreaProvider>
@@ -38,15 +49,33 @@ export default function LoginForm({ navigation }) {
                             </FormControl.HelperText>
 
                             <Button
-                                onPress={
-                                    async () => makeLogin(email, passwd, navigation)}
+                                onPress={login}
                             >
                                 Enviar
                             </Button>
+
                             <FormControl.ErrorMessage
                                 leftIcon={<WarningOutlineIcon size="xs" />}>
                                 Atleast 6 characters are required.
                             </FormControl.ErrorMessage>
+
+                            {showErro &&
+                                <Alert w="100%" status="error" my="4">
+                                    <VStack space={2} flexShrink={1} w="100%">
+                                        <HStack flexShrink={1} space={2} justifyContent="space-between">
+                                            <HStack space={2} flexShrink={1}>
+                                                <Alert.Icon mt="1" />
+                                                <Text fontSize="md" color="coolGray.800">
+                                                    {erro}
+                                                </Text>
+                                            </HStack>
+                                            <IconButton variant="unstyled" onPress={() => setShowErro(false)} _focus={{
+                                                borderWidth: 0
+                                            }} icon={<CloseIcon size="3" color="coolGray.600" />} />
+                                        </HStack>
+                                    </VStack>
+                                </Alert>
+                            }
                         </Stack>
 
                     </FormControl>

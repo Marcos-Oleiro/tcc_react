@@ -5,15 +5,22 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import ReputationEnum from "../util/ReputationEnum";
 import * as Location from "expo-location";
 import Map from "./Map";
-import { updateLocation } from "../util/Utils.js";
+import { updateLocation, getData, storeData } from "../util/Utils.js";
 
 export default function Home({ navigation, route }) {
 
     const [sliderValue, setSliderValue] = useState(15)
     const [coordLat, setCoordLat] = useState(0.0);
     const [coordLong, setCoordLong] = useState(0.0);
-    const [latDelta, setLatDelta] = useState(0.027);
+    const [latDelta, setLatDelta] = useState(0.05);
     const [errorMsg, setErrorMsg] = useState('');
+    let sliderVal;
+
+    const storeSlider = (v) => {
+        storeData("sliderVal", v.toString()).then(() => { }).catch(erro => {
+            console.log(erro)
+        });
+    };
 
     useEffect(() => {
         (async () => {
@@ -24,11 +31,19 @@ export default function Home({ navigation, route }) {
                     setErrorMsg('Permission to access location was denied');
                     return;
                 }
+                console.log("rodou o useEffect")
                 let resp = await Location.getCurrentPositionAsync({});
 
-                // let backPerm = await Location.requestBackgroundPermissionsAsync();
-                setCoordLat(resp.coords.latitude)
-                setCoordLong(resp.coords.longitude)
+                // console.log('slideVal - Antes -> ' + sliderVal)
+                sliderVal = parseFloat(await getData('sliderVal'))
+                setSliderValue(sliderVal);
+                console.log('slideVal - storage -> ' + sliderVal)
+                console.log('sliderValue - state -> ' + sliderValue)
+
+                respLat = resp.coords.latitude;
+                respLong = resp.coords.longitude;
+                setCoordLat(respLat)
+                setCoordLong(respLong)
 
                 let update = await Location.watchPositionAsync({
                     distanceInterval: 10,
@@ -39,8 +54,15 @@ export default function Home({ navigation, route }) {
                     newLocation => {
                         setCoordLat(newLocation.coords.latitude)
                         setCoordLong(newLocation.coords.longitude)
-                        updateLocation({ coordLat, coordLong })
+                        if (coordLat != 0 && coordLong != 0) {
+                            updateLocation({ coordLat, coordLong })
+                        }
+                        else {
+                            updateLocation({ coordLat: respLat, coordLong: respLong })
+                        }
                     });
+
+                // loadSliderVal();
             }
             catch {
                 setErrorMsg('Exceção na hora de pegar a localização')
@@ -72,7 +94,8 @@ export default function Home({ navigation, route }) {
                         </HStack>
                     </Heading>
                 </VStack>
-                <Map pt={20} long={coordLong} lat={coordLat} latDelta={latDelta} sliderValue={sliderValue} />
+                <Map pt={20} long={coordLong} lat={coordLat} latDelta={setLatDeltaBySlideValue(sliderValue)} sliderValue={sliderValue} />
+
                 <Slider pt={20}>
                     <Slider
 
@@ -82,7 +105,8 @@ export default function Home({ navigation, route }) {
                         accessibilityLabel="hello world"
                         step={2}
                         onChange={(v) => {
-                            setSliderValue(v)
+                            storeSlider(v);
+                            setSliderValue(v);
                             setLatDelta(setLatDeltaBySlideValue(v));
                         }}
                     >
@@ -92,8 +116,12 @@ export default function Home({ navigation, route }) {
                         <Slider.Thumb />
                     </Slider>
                 </Slider>
+                <VStack space={1} alignItems="center">
+                    <Text fontSize="2xl" style={styles.userProfie}>{sliderValue}</Text>
+                    {/* <Text fontSize="2xl" style={styles.userProfie}>{sliderVal}</Text> */}
+                </VStack>
             </Box >
-        </SafeAreaProvider>
+        </SafeAreaProvider >
     )
 }
 
@@ -102,7 +130,6 @@ const styles = StyleSheet.create({
         color: "white"
     }
 });
-
 
 const setLatDeltaBySlideValue = (sliderValue) => {
 
