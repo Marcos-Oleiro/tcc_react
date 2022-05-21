@@ -1,68 +1,94 @@
-import { Avatar, Box, Heading, HStack, Text, VStack, Slider } from "native-base";
-import React, { useState, useEffect } from "react";
+import { Avatar, Box, Heading, HStack, Text, VStack, Slider, Center } from "native-base";
+import React, { useState, useEffect, useRef } from "react";
 import { StyleSheet, useWindowDimensions } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import ReputationEnum from "../util/ReputationEnum";
 import * as Location from "expo-location";
 import Map from "./Map";
-import { updateLocation, getData, storeData } from "../util/Utils.js";
+import { updateLocation, getUsersPerDistance } from "../util/Utils.js";
 
 export default function Home({ navigation, route }) {
 
-    const [sliderValue, setSliderValue] = useState(15)
+    const [sliderValue, setSliderValue] = useState(route.params.radius);
     const [coordLat, setCoordLat] = useState(0.0);
     const [coordLong, setCoordLong] = useState(0.0);
+    const [nearUsers, setNearUsers] = useState({});
     const [latDelta, setLatDelta] = useState(0.05);
-    const [errorMsg, setErrorMsg] = useState('');
-    let sliderVal;
+    const token = route.params.token;
+    const id = route.params.id;
+    const nickname = route.params.nickname;
+    const isMounted = useRef(false);
+    const [refresh, setRefresh] = useState(false)
+    let bodyNearUsers;
 
-    const storeSlider = (v) => {
-        storeData("sliderVal", v.toString()).then(() => { }).catch(erro => {
-            console.log(erro)
-        });
+    const onSliderChange = (value) => {
+        // console.log("value => " + value)
+        setSliderValue(value);
+        setLatDelta(setLatDeltaBySlideValue(value));
     };
+
+    useEffect(() => {
+
+        if (isMounted.current) {
+            if (refresh) {
+                setRefresh(false)
+                setTimeout(() => {
+                    getUsersPerDistance(token, id, coordLat, coordLong, sliderValue)
+                        .then(
+                            (bodyNearUsers) => {
+                                setNearUsers(bodyNearUsers)
+                            }
+                        )
+                    setRefresh(true)
+                }, 3000)
+            }
+        } else {
+            isMounted.current = true;
+            setRefresh(true)
+        }
+    }, [sliderValue]);
+
+    // useEffect(() => {
+
+    //     console.log(`nearUsers no useEffect => ${JSON.stringify(nearUsers)}`)
+    // }, [nearUsers])
 
     useEffect(() => {
         (async () => {
             try {
+
                 let { status } = await Location.requestForegroundPermissionsAsync();
 
                 if (status !== 'granted') {
-                    setErrorMsg('Permission to access location was denied');
+                    setErrorMsg('Exceção na hora de pegar a localização')
                     return;
                 }
-                console.log("rodou o useEffect")
+
                 let resp = await Location.getCurrentPositionAsync({});
 
-                // console.log('slideVal - Antes -> ' + sliderVal)
-                sliderVal = parseFloat(await getData('sliderVal'))
-                setSliderValue(sliderVal);
-                console.log('slideVal - storage -> ' + sliderVal)
-                console.log('sliderValue - state -> ' + sliderValue)
+                let respLat = resp.coords.latitude;
+                let respLong = resp.coords.longitude;
 
-                respLat = resp.coords.latitude;
-                respLong = resp.coords.longitude;
-                setCoordLat(respLat)
-                setCoordLong(respLong)
+                setCoordLat(respLat);
+                setCoordLong(respLong);
 
-                let update = await Location.watchPositionAsync({
-                    distanceInterval: 10,
-                    // timeInterval: 5000,
-                    accuracy: Location.Accuracy.Highest
-
-                },
+                let update = await Location.watchPositionAsync(
+                    {
+                        distanceInterval: 10,
+                        accuracy: Location.Accuracy.Highest,
+                    },
                     newLocation => {
-                        setCoordLat(newLocation.coords.latitude)
-                        setCoordLong(newLocation.coords.longitude)
+
+                        setCoordLat(newLocation.coords.latitude);
+                        setCoordLong(newLocation.coords.longitude);
                         if (coordLat != 0 && coordLong != 0) {
                             updateLocation({ coordLat, coordLong })
                         }
                         else {
                             updateLocation({ coordLat: respLat, coordLong: respLong })
                         }
-                    });
-
-                // loadSliderVal();
+                    }
+                );
             }
             catch {
                 setErrorMsg('Exceção na hora de pegar a localização')
@@ -86,29 +112,21 @@ export default function Home({ navigation, route }) {
                                     MO
                                 </Avatar>
                             </Box>
-                            {/* <VStack bg="blueGray.900" style={styles.userCard} borderRadius={45} px={0}> */}
-                            <VStack bg="blueGray.900" ml={4} borderRadius={45} px={70}>
-                                <Text style={styles.userProfie} alignSelf="center" lineHeight="5xl" letterSpacing="2xl">spellzito</Text>
-                                <Text style={styles.userProfie} >Reputação: {ReputationEnum.BOA}</Text>
-                            </VStack>
+                            <Text style={styles.userProfie} bg="blueGray.900" ml={4} borderRadius={45} px={70} alignSelf="center" lineHeight="5xl" letterSpacing="2xl">{nickname}</Text>
                         </HStack>
                     </Heading>
                 </VStack>
-                <Map pt={20} long={coordLong} lat={coordLat} latDelta={setLatDeltaBySlideValue(sliderValue)} sliderValue={sliderValue} />
+                <Map pt={20} long={coordLong} lat={coordLat} latDelta={setLatDeltaBySlideValue(sliderValue)} sliderValue={sliderValue} usersArr={nearUsers} />
 
                 <Slider pt={20}>
                     <Slider
-
+                        value={sliderValue}
                         defaultValue={sliderValue}
                         minValue={1}
                         maxValue={100}
                         accessibilityLabel="hello world"
                         step={2}
-                        onChange={(v) => {
-                            storeSlider(v);
-                            setSliderValue(v);
-                            setLatDelta(setLatDeltaBySlideValue(v));
-                        }}
+                        onChange={onSliderChange}
                     >
                         <Slider.Track>
                             <Slider.FilledTrack />

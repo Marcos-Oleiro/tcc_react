@@ -13,8 +13,8 @@ export default function LoginForm({ navigation, routes }) {
     // const [error] = routes.params;
 
     const login = () => {
-        makeLogin(email, passwd, navigation).then(({ token, id }) => {
-            navigation.navigate('Home', { token, id })
+        makeLogin(email, passwd, navigation).then(({ token, id, radius, nickname }) => {
+            navigation.navigate('Home', { token, id, radius, nickname })
         }).catch(erro => {
             console.log(erro)
             setErro(erro)
