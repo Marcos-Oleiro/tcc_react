@@ -84,6 +84,7 @@ export async function getUsersPerDistance(token, id, lat, long, radius) {
     };
 
     radius = radius * 1000;
+
     const url = `${Constants.HOST}/getusers/all/${id}?distance=${radius}&lat=${lat}&long=${long}`;
     try {
         const raw = await fetch(url, options);

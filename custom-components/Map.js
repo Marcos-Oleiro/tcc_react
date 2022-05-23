@@ -15,8 +15,12 @@ export default function Map({ lat, long, latDelta, sliderValue, usersArr }) {
     setNearUsersMap(usersArr);
     console.log(`nearusers MAP=> ${JSON.stringify(nearUsersMap)}`);
     console.log(`nearusers MAP=> ${Array.isArray(nearUsersMap)}`);
+    console.log(`Raio=> ${sliderValue * 1000}`);
   });
 
+  useEffect(() => {
+    setNearUsersMap({})
+  }, [sliderValue])
 
   return (
 
@@ -45,19 +49,15 @@ export default function Map({ lat, long, latDelta, sliderValue, usersArr }) {
           description={marker.description}
         />
       ))} */}
-      {/* {nearUsersMap.map((user) => (
+      {Array.isArray(nearUsersMap) ? nearUsersMap.map((user) => (
+
         <Marker
           key={user.id}
-          coordinate={{ latitude: user.lat, longitude: user.long }}
+          coordinate={{ latitude: parseFloat(user.lat), longitude: parseFloat(user.long) }}
           title={user.nickname}
         />
-      ))} */}
-      {/* <Marker
-        coordinate={{ latitude: lat, longitude: long }}
-        tappable={false}
-        pinColor={"deepskyblue"}
-        opacity={0.6}
-      /> */}
+      )) : null}
+
       <Circle
         center={{ latitude: lat, longitude: long }}
         radius={sliderValue * 1000}

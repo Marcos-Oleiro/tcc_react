@@ -40,7 +40,7 @@ export default function Home({ navigation, route }) {
                             }
                         )
                     setRefresh(true)
-                }, 3000)
+                }, 100)
             }
         } else {
             isMounted.current = true;
